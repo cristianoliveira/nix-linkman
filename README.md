@@ -8,7 +8,7 @@ and ensure the links are updated when the target files change.
 
 To use this extension, you need to define a service in your Nix configuration.
 
-```
+```nix
 {
   services.linkman = {
     enable = true;
@@ -45,6 +45,9 @@ This will create a systemd service that will manage the symbolic links defined i
   };
 }
 ```
+
+That will create the following symbolic links in the user's home directory:
+```
 ls -la ~/.config
 lrwxrwxrwx  1 jonh users   48 Jul 24 00:05 tmux -> /nix/store/lwhrs7rjs984f3jqk7d56vq8ykgs3lpv-tmux
 lrwxrwxrwx  1 jonh users   49 Jul 24 00:05 nvim -> /nix/store/0v3q7x5z6f8g2j9k4c5b6v8y9z3l4m5n-nvim
@@ -53,7 +56,7 @@ lrwxrwxrwx  1 jonh users   49 Jul 24 00:05 nvim -> /nix/store/0v3q7x5z6f8g2j9k4c
 ## Installation
 
 Using flake
-```
+```nix
 {
   inputs.linkman.url = "github:yourusername/nix-linkman";
   outputs = { self, nixpkgs, ... }: {
@@ -62,3 +65,15 @@ Using flake
 }
 ```
 
+Using NixOS configuration
+```nix
+{
+  imports = [
+    ./path/to/linkman.nix
+  ];
+}
+```
+
+# License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
