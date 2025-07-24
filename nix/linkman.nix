@@ -2,26 +2,30 @@
   cfg = config.services.linkman;
 
   # Ensure the target directories exist
+  targetsAsList = lib.mapAttrsToList (
+    _: path: builtins.toString path
+  ) cfg.targets;
   createTargetDirs  = builtins.concatStringsSep "\n" (
-    map (d: "mkdir -p ${d}") cfg.targets
+    map (d: "mkdir -p ${d}") targetsAsList
   );
 
   # Create a list of links to manage
   links = builtins.concatStringsSep "\n" (
-    map (d: "ln -sf ${d.source} ${d.target}") cfg.links
+    map (d: "ln -sfnb ${d.source} ${d.target}") cfg.links
   );
 
   # Attempt to remove existing symbolic links if they exist
   # if it fails, it will restore the previusly backed up link
-  removeLinks = builtins.concatStringsSep "\n" (
+  replaceLinks = builtins.concatStringsSep " \n" (
     map (d: builtins.concatStringsSep " \n" [ 
-      # Backup existing file
-      "mv -f ${d.target} ${d.target}.bak || true"
-      # Create symlink or restore backup
-      "ln -sf ${d.source} ${d.target} || mv -f ${d.target}.bak ${d.target}"
-      # Remove backup file
-      "rm -f ${d.target}.bak || true"
+      "ln -sfnb ${d.source} ${d.target} || mv -f ${d.target}~ ${d.target}"
     ]) cfg.links
+  );
+  rollbackLinks = builtins.concatStringsSep "\n" (
+    map (d: "mv -f ${d.target}~ ${d.target} || true") cfg.links
+  );
+  cleanUpLinks = builtins.concatStringsSep "\n" (
+    map (d: "rm -f ${d.target}~") cfg.links
   );
 
   linkScript = pkgs.writeShellScriptBin "nix-linkman" ''
@@ -36,22 +40,29 @@
     function apply_links {
       ${links}
     }
-    function remove_links {
-      ${removeLinks}
+    function replace_links {
+      ${replaceLinks}
     }
+    function rollback {
+      ${rollbackLinks}
+    }
+    function clean_up {
+      ${cleanUpLinks}
+    }
+
+    trap rollback ERR
+    trap clean_up EXIT
 
     # Create the target directories if they don't exist
     create_target_dirs
 
     # Remove existing symbolic links
-    remove_links
+    replace_links
 
     # if CMD_ARG is "serve" then run the service loop
     if [ "$CMD_ARG" = "serve" ]; then
       echo "Linkman service started. Managing links..."
     else
-      apply_links
-
       echo "Linkman script executed. Use 'serve' to run the service."
       exit 0
     fi
@@ -69,8 +80,11 @@ in
     enable = mkEnableOption "the linkman service";
 
     targets = mkOption {
-      type = types.listOf types.str;
-      example = [ "/path/to/folder1" "/path/to/folder2" ];
+      type = types.attrsOf types.str;
+      example = {
+        "home" = "~/";
+        "config" = "~/.config";
+      };
       description = "Required: List of target directories to ensure exist";
     };
 

@@ -3,13 +3,14 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
+    utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, ... }:
-    {
-      # Expose the NixOS module for flake users
-      nixosModules = {
-        linkman = ./nix/linkman.nix;
-      };
-    };
+  outputs = { self, utils, ... }:
+    utils.lib.eachDefaultSystem (_: {
+        # Expose the NixOS module for flake users
+        nixosModules = { 
+          linkman = ./nix/linkman.nix;
+        };
+      });
 }
