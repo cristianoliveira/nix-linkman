@@ -11,7 +11,7 @@ and ensure the links are updated when the target files change.
 I'm applying the same principle for nix and nixos here. I'm aware of [home-manager](https://github.com/nix-community/home-manager) existence and I know it does more than just doftiles management, but 
 I want to learn more about nix before adding yet another abstract layer
 
-** As of now this is just a learning project, Use at your own risk. I'm using it myself but expect breaking changes"
+**As of now this is just a learning project, Use at your own risk. I'm using it myself but expect breaking changes**
 
 # USAGE
 
