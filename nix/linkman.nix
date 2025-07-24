@@ -51,7 +51,7 @@ in
   options.services.linkman = with lib; {
     enable = mkEnableOption "the linkman service";
     links = mkOption {
-      type = types.listOf (types.attrsOf types.any);
+      type = types.listOf types.attrs;
       default = [];
       example = [ { source = /path/to/src; target = "/path/to/tgt"; } ];
       description = "List of links to manage";
