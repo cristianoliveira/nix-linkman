@@ -29,7 +29,7 @@ To use this extension, you need to define a service in your Nix configuration.
 }
 ```
 This will create a systemd service that will manage the symbolic links defined in the `links` list.
-```nix
+
 # Example
 
 ```nix
@@ -58,20 +58,22 @@ lrwxrwxrwx  1 jonh users   49 Jul 24 00:05 nvim -> /nix/store/0v3q7x5z6f8g2j9k4c
 Using flake
 ```nix
 {
-  inputs.linkman.url = "github:yourusername/nix-linkman";
-  outputs = { self, nixpkgs, ... }: {
-    nixosModules.linkman = import self.nixosModules.linkman;
+  inputs.linkman.url = "github:cristianoliveira/nix-linkman";
+
+  outputs = { nixpkgs, linkman, ... }: {
+    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+      system = "aarch64-linux";
+      modules = [
+        # Import the linkman module
+        linkman.nixosModules.linkman;
+  
+        # System
+        ./nix/configuration.nix
+      ];
+    };
   };
 }
-```
 
-Using NixOS configuration
-```nix
-{
-  imports = [
-    ./path/to/linkman.nix
-  ];
-}
 ```
 
 # License
