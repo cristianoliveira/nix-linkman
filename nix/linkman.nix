@@ -3,7 +3,7 @@
 
   # Create a list of links to manage
   links = builtins.concatStringsSep "\n" (
-    map (d: "ln -sf ${d.source} ${d.target}") cfg.configs
+    map (d: "ln -sf ${d.source} ${d.target}") cfg.links
   );
 
   # Attempt to remove existing symbolic links if they exist
@@ -16,12 +16,12 @@
       "ln -sf ${d.source} ${d.target} || mv -f ${d.target}.bak ${d.target}"
       # Remove backup file
       "rm -f ${d.target}.bak || true"
-    ]) cfg.configs
+    ]) cfg.links
   );
 
   # Create the target directories if they don't exist
   createTargetDirs = builtins.concatStringsSep "\n" (
-    map (d: "mkdir -p $(dirname ${d.target})") cfg.configs
+    map (d: "mkdir -p $(dirname ${d.target})") cfg.links
   );
 
   # Build a small script that iterates over links
