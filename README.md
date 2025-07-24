@@ -10,15 +10,24 @@ To use this extension, you need to define a service in your Nix configuration.
 
 ```nix
 {
-  services.linkman = {
+  services.linkman =  let
+    # Define the targets where the links will be created
+    # The folders will be created if they do not exist
+    targets = {
+      "home" = "~/"; 
+      "home-config" = "~/.config";
+    };
+  in {
     enable = true;
     user = "yourusername"; # Optional, defaults to root
     group = "yourgroup"; # Optional, defaults to root
 
+    inherit targets;
+
     links = [
       # source is a path
       # target is a string that will be the symlink name
-      { source = /path/to/source; target = "/path/to/target"; }
+      { source = /path/to/linkfile; target = "${targets.home}/linkfile"; }
     ];
 
     # Configs
@@ -34,12 +43,18 @@ This will create a systemd service that will manage the symbolic links defined i
 {
   services.linkman = {
     enable = true;
+
+    # Define the targets where the links will be created
+    targets = {
+      "home-config" = "~/.config";
+    };
+
     links = [
-      { source = ./tmux; target = "./.config/tmux"; }
-      { source = ./nvim; target = "./.config/nvim"; }
+      { source = ./tmux; target = "~/.config/tmux"; }
+      { source = ./nvim; target = "~/.config/nvim"; }
     ];
+
     user = "jonh";
-    group = "users";
   };
 }
 ```
@@ -64,12 +79,15 @@ Using flake
     };
   }
 
-  outputs = { nixpkgs, linkman, ... }: {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+  outputs = { nixpkgs, linkman, ... }: let
       system = "aarch64-linux";
+  in {
+    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+      inherit system;
+
       modules = [
         # Import the linkman module
-        linkman.nixosModules.linkman;
+        linkman.nixosModules."${system}".linkman;
   
         # System
         ./nix/configuration.nix
