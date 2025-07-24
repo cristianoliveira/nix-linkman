@@ -33,14 +33,14 @@ To use this extension, you need to define a service in your Nix configuration.
 
     inherit targets;
 
-    links = [
+    links = with targets; [
       # Example of immutable link (This will be a read-only symbolic link)
       # Declare the source as nix path, which will be a stored in the Nix store
-      { source = /path/to/linkfile; target = "${targets.home}/linkfile"; }
+      { source = /path/to/linkfile; target = "${home}/linkfile"; }
       
       # Example of mutable link (This is a standard symbolic link)
       # Declare the source as string, which will be resolved at runtime
-      { source = "~/path/to/link"; target = "${targets.home_config}/link"; }
+      { source = "~/path/to/link"; target = "${home_config}/link"; }
 
       # Declare target as normal string always
     ];
@@ -55,19 +55,20 @@ This will create a systemd service that will manage the symbolic links defined i
 # Example
 
 ```nix
+# ./nix/linkman.nix
 {
-  services.linkman = {
+  services.linkman = rec {
     enable = true;
 
     # Define the targets where the links will be created
     targets = {
-      "home-config" = "~/.config";
+      "home_config" = "~/.config";
     };
 
-    links = [
-      { source = ./tmux; target = "~/.config/tmux"; }
-      { source = ./nvim; target = "~/.config/nvim"; }
-      { source = "/home/jonh/dotfiles/foo"; target = "~/.config/foo"; }
+    links = with targets; [
+      { source = ./tmux; target = "${home_config}/tmux"; }
+      { source = ./nvim; target = "${home_config}/nvim"; }
+      { source = "/home/jonh/dotfiles/foo"; target = "${home_config}/foo"; }
     ];
 
     user = "jonh";
@@ -108,6 +109,7 @@ Using flake
   
         # System
         ./nix/configuration.nix
+        ./nix/linkman.nix # The module we defined above
       ];
     };
   };
