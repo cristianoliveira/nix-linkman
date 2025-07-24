@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }: let
   cfg = config.services.linkman;
 
+  # Ensure the target directories exist
+  createTargetDirs  = builtins.concatStringsSep "\n" (
+    map (d: "mkdir -p ${d}") cfg.targets
+  );
+
   # Create a list of links to manage
   links = builtins.concatStringsSep "\n" (
     map (d: "ln -sf ${d.source} ${d.target}") cfg.links
@@ -19,41 +24,43 @@
     ]) cfg.links
   );
 
-  # Create the target directories if they don't exist
-  createTargetDirs = builtins.concatStringsSep "\n" (
-    map (d: "mkdir -p $(dirname ${d.target})") cfg.links
-  );
-
-  # Build a small script that iterates over links
   linkScript = pkgs.writeShellScriptBin "nix-linkman" ''
     #!/bin/sh
 
     set -e
 
     CMD_ARG="$1"
+    function create_target_dirs {
+      ${createTargetDirs}
+    }
+    function apply_links {
+      ${links}
+    }
+    function remove_links {
+      ${removeLinks}
+    }
 
     # Create the target directories if they don't exist
-    ${createTargetDirs}
-
-    mkdir -p /tmp/dotfiles
+    create_target_dirs
 
     # Remove existing symbolic links
-    ${removeLinks}
+    remove_links
 
     # if CMD_ARG is "serve" then run the service loop
     if [ "$CMD_ARG" = "serve" ]; then
       echo "Linkman service started. Managing links..."
     else
+      apply_links
+
       echo "Linkman script executed. Use 'serve' to run the service."
       exit 0
     fi
 
+    # Recreate symbolic links for dotfiles from time to time
+    # To ensure that the links are always up to date
     while true; do
-      # Recreate symbolic links for dotfiles from time to time
-      # To ensure that the links are always up to date
+      apply_links
       sleep ${toString cfg.checkInterval}
-
-      ${links}
     done
   '';
 in
@@ -61,11 +68,16 @@ in
   options.services.linkman = with lib; {
     enable = mkEnableOption "the linkman service";
 
+    targets = mkOption {
+      type = types.listOf types.str;
+      example = [ "/path/to/folder1" "/path/to/folder2" ];
+      description = "Required: List of target directories to ensure exist";
+    };
+
     links = mkOption {
       type = types.listOf types.attrs;
-      default = [];
       example = [ { source = /path/to/src; target = "/path/to/tgt"; } ];
-      description = "List of links to manage";
+      description = "Required: List of links to manage";
     };
 
     user = mkOption {
