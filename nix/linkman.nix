@@ -41,7 +41,7 @@
     while true; do
       # Recreate symbolic links for dotfiles from time to time
       # To ensure that the links are always up to date
-      sleep ${toString cfg.restartIntervalInSecs}
+      sleep ${toString cfg.checkInterval}
 
       ${links}
     done
@@ -50,23 +50,27 @@ in
 {
   options.services.linkman = with lib; {
     enable = mkEnableOption "the linkman service";
+
     links = mkOption {
       type = types.listOf types.attrs;
       default = [];
       example = [ { source = /path/to/src; target = "/path/to/tgt"; } ];
       description = "List of links to manage";
     };
+
     user = mkOption {
       type = types.str;
       default = "root";
       description = "User to own the links";
     };
+
     group = mkOption {
       type = types.str;
       default = "root";
       description = "Group to own the links";
     };
-    configs.checkInterval = mkOption {
+
+    checkInterval = mkOption {
       type = types.int;
       default = 300;
       description = "Seconds between link updates";
@@ -76,9 +80,9 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ linkScript ];
 
-    systemd.services."dotfiles-${cfg.user}" = {
+    systemd.services."linkman-${cfg.user}" = {
       enable = cfg.enable;
-      description = "Dotfiles management for ${cfg.user}";
+      description = "Link management for ${cfg.user}";
 
       wantedBy = [ "multi-user.target" ];
 
@@ -93,7 +97,7 @@ in
         Group = "users";
         Type = "simple";
         Restart = "always";
-        RestartSec = "${toString cfg.restartIntervalInSecs}s";
+        RestartSec = "${toString cfg.checkInterval}s";
       };
     };
   };

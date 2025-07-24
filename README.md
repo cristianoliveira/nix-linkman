@@ -12,19 +12,17 @@ To use this extension, you need to define a service in your Nix configuration.
 {
   services.linkman = {
     enable = true;
+    user = "yourusername"; # Optional, defaults to root
+    group = "yourgroup"; # Optional, defaults to root
+
     links = [
       # source is a path
       # target is a string that will be the symlink name
       { source = /path/to/source; target = "/path/to/target"; }
     ];
-    user = "yourusername"; # Optional, defaults to root
-    group = "yourgroup"; # Optional, defaults to root
-    # Optional, defaults to 60 seconds
-    configs = {
-        # Time in seconds to wait before checking for changes and updating links
-        checkInterval = 3000; # Optional, defaults 5 minutes
-    };
 
+    # Configs
+    checkInterval = 3000; # Optional, defaults 5 minutes
   };
 }
 ```
