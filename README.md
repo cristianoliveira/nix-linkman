@@ -56,7 +56,13 @@ lrwxrwxrwx  1 jonh users   49 Jul 24 00:05 nvim -> /nix/store/0v3q7x5z6f8g2j9k4c
 Using flake
 ```nix
 {
-  inputs.linkman.url = "github:cristianoliveira/nix-linkman";
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    linkman = {
+      url = "github:cristianoliveira/nix-linkman";
+      nixpkgs.follows = "nixpkgs";
+    };
+  }
 
   outputs = { nixpkgs, linkman, ... }: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
