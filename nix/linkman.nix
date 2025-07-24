@@ -30,6 +30,8 @@
 
     set -e
 
+    CMD_ARG="$1"
+
     # Create the target directories if they don't exist
     ${createTargetDirs}
 
@@ -37,6 +39,14 @@
 
     # Remove existing symbolic links
     ${removeLinks}
+
+    # if CMD_ARG is "serve" then run the service loop
+    if [ "$CMD_ARG" = "serve" ]; then
+      echo "Linkman service started. Managing links..."
+    else
+      echo "Linkman script executed. Use 'serve' to run the service."
+      exit 0
+    fi
 
     while true; do
       # Recreate symbolic links for dotfiles from time to time
@@ -89,7 +99,7 @@ in
       script = ''
         #!/bin/sh
 
-        ${linkScript}/bin/nix-linkman
+        ${linkScript}/bin/nix-linkman serve
       '';
 
       serviceConfig = {
