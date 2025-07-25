@@ -22,7 +22,7 @@
               {
                 name = "linkman";
                 run = [
-                  "nix flake check"
+                  "nix flake check --all-systems"
                 ];
                 change = [ "**/*.nix" ];
               }
@@ -43,6 +43,7 @@
             ];
 
             shellHook = ''
+              rm -f .watch.yml
               ln -sf ${configFile} .watch.yml
             '';
           };

@@ -28,6 +28,15 @@
     map (d: "rm -f ${d.target}~") cfg.links
   );
 
+  executeCopies = builtins.concatStringsSep "\n" (
+    map (entry: let
+      src = entry.source;
+      dst = lib.replaceStrings [ "${cfg.targets.home}" ] [ "${cfg.targets.home}" ] entry.target;
+    in ''
+      ${if entry.recursive then "cp -r" else "cp"} "${src}" "${dst}"
+    '') cfg.copies
+  );
+
   linkScript = pkgs.writeShellScriptBin "nix-linkman" ''
     #!/bin/sh
 
@@ -49,6 +58,9 @@
     function clean_up {
       ${cleanUpLinks}
     }
+    function execute_copies {
+      ${executeCopies}
+    }
 
     trap rollback ERR
     trap clean_up EXIT
@@ -56,8 +68,9 @@
     # Create the target directories if they don't exist
     create_target_dirs
 
-    # Remove existing symbolic links
     replace_links
+
+    execute_copies
 
     # if CMD_ARG is "serve" then run the service loop
     if [ "$CMD_ARG" = "serve" ]; then
@@ -71,6 +84,7 @@
     # To ensure that the links are always up to date
     while true; do
       apply_links
+      execute_copies
       sleep ${toString cfg.checkInterval}
     done
   '';
@@ -92,6 +106,28 @@ in
       type = types.listOf types.attrs;
       example = [ { source = /path/to/src; target = "/path/to/tgt"; } ];
       description = "Required: List of links to manage";
+    };
+
+    copies = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          source = lib.mkOption {
+            type = lib.types.path;
+            description = "The path to copy (a file or directory).";
+          };
+          target = lib.mkOption {
+            type = lib.types.str;
+            description = "Where to copy it to (shell‑expanded).";
+          };
+          recursive = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+            description = "Whether to pass -r for directories.";
+          };
+        };
+      });
+      default = [];
+      description = "A list of files or directories to copy into place.";
     };
 
     user = mkOption {

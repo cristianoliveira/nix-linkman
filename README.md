@@ -45,6 +45,20 @@ To use this extension, you need to define a service in your Nix configuration.
       # Declare target as normal string always
     ];
 
+    copies = with targets; [
+      # Example of copying files instead of creating links
+      { 
+        source = /path/to/folder;
+        target = "${home}/folder";
+        recursive = true;
+      }
+      { 
+        source = /path/to/otherfile;
+        target = "${home}/otherfile";
+        recursive = false;
+      }
+    ];
+
     # Configs
     checkInterval = 3000; # Optional, interval time in second. Default: 5 minutes.
   };
