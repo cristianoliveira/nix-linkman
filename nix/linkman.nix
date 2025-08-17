@@ -45,21 +45,27 @@
     CMD_ARG="$1"
     function create_target_dirs {
       ${createTargetDirs}
+      echo "Target directories created successfully."
     }
     function apply_links {
       ${links}
+      echo "Applied symbolic links successfully."
     }
     function replace_links {
       ${replaceLinks}
+      echo "Replaced links successfully."
     }
     function rollback {
       ${rollbackLinks}
+      echo "Rolled back to previous links."
     }
     function clean_up {
       ${cleanUpLinks}
+      echo "Cleaned up old links."
     }
     function execute_copies {
       ${executeCopies}
+      echo "Files copied successfully."
     }
 
     trap rollback ERR
