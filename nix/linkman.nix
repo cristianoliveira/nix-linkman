@@ -149,10 +149,9 @@ in
     };
   };
 
-  config = lib.mkIf (cfg.enable && pkgs.stdenv.isLinux) {
+  config = lib.mkIf cfg.enable {
     environment.systemPackages = [ linkScript ];
 
-    # Linux: systemd service
     systemd.services."linkman-${cfg.user}" = {
       enable = cfg.enable;
       description = "Link management for ${cfg.user}";
@@ -171,30 +170,6 @@ in
         Type = "simple";
         Restart = "always";
         RestartSec = "${toString cfg.checkInterval}s";
-      };
-    };
-  } // lib.mkIf cfg.enable && pkgs.stdenv.isDarwin {
-    environment.systemPackages = [ linkScript ];
-
-    # macOS: launchd agent
-    launchd.agents."linkman-${cfg.user}" = {
-      enable = cfg.enable;
-      description = "Link management for ${cfg.user}";
-      command = "${linkScript}/bin/nix-linkman serve";
-      path = [ linkScript pkgs.coreutils pkgs.bashInteractive ];
-
-      serviceConfig = {
-        Label = "nix.linkman.default";
-        RunAtLoad = true;
-        KeepAlive = true;
-
-# not sure where to put these paths and not reference a hard-coded `$HOME`; `/var/log`?
-        StandardOutPath = "/var/log/colima.log";
-        StandardErrorPath = "/var/log/colima.error.log";
-
-        StartInterval = "${toString cfg.checkInterval}s";
-
-# not using launchd.agents.<name>.path because colima needs the system ones as well
       };
     };
   };
